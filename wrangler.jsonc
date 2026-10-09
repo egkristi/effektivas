@@ -1,0 +1,44 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "effektivas",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Statiske filer (HTML/CSS/JS/bilder) ligger i ./public og serveres fra Cloudflare sitt edge.
+  // Worker-koden kjører først på alle forespørsler slik at www-redirect og
+  // sikkerhetsheadere gjelder hele nettstedet, og /api/* håndteres av Workeren.
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash",
+    "run_worker_first": true
+  },
+
+  // Egendefinert domene – Cloudflare oppretter DNS-poster og sertifikat automatisk
+  // når sonen effektivas.no ligger i samme Cloudflare-konto.
+  "routes": [
+    { "pattern": "effektivas.no", "custom_domain": true },
+    { "pattern": "www.effektivas.no", "custom_domain": true }
+  ],
+
+  "vars": {
+    "CANONICAL_HOST": "effektivas.no",
+    "CONTACT_TO": "post@effektivas.no",
+    "CONTACT_FROM": "nettside@effektivas.no"
+  },
+
+  // Kontaktskjema sendes som e-post via Cloudflare Email Routing.
+  // Krever at Email Routing er aktivert på effektivas.no og at CONTACT_TO er en
+  // verifisert mottakeradresse. Fjern blokken om du ikke vil bruke e-post.
+  "send_email": [
+    { "name": "CONTACT_EMAIL", "destination_address": "post@effektivas.no" }
+  ],
+
+  "observability": { "enabled": true }
+
+  // Valgfritt: Turnstile (spam-vern). Sett hemmeligheten med:
+  //   npx wrangler secret put TURNSTILE_SECRET
+  // og legg inn site key i public/index.html (data-sitekey).
+}
